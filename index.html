@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dual Wheel Randomizer</title>
+    <style>
+        /* --- General Layout and GitHub Theme --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            margin: 20px;
+            background-color: #f6f8fa;
+            color: #24292e;
+        }
+        .container {
+            /* Increased max-width to accommodate larger wheels */
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(27, 31, 35, 0.1);
+        }
+
+        /* New Wrapper for Wheels to keep them side-by-side */
+        .wheel-display-row {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align wheels and button from the top */
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        /* Control Panel Styles */
+        .controls {
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e1e4e8;
+        }
+        /* Adjusted control columns to remove the space previously reserved for the spin button */
+        .controls-column {
+            width: 45%; /* Now just two main content columns */
+            min-width: 380px;
+            margin: 10px;
+        }
+
+        /* Wheel Group Styles - MIN-WIDTH INCREASED */
+        .wheel-group {
+            width: 40%; /* Reduced width slightly to make room for the center button */
+            min-width: 500px; /* Still large enough for 500px canvas */
+            margin: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Headings */
+        h2 {
+            border-bottom: 2px solid #e1e4e8;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* BANNER STYLE */
+        .banner {
+            background-color: #0366d6;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.5em;
+            border-bottom: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* --- Button & Select Styling --- */
+        button {
+            padding: 10px 18px;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            transition: background-color 0.2s, opacity 0.2s;
+        }
+        button:disabled {
+            background-color: #ccc !important;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* NEW STYLING FOR CENTERED SPIN BUTTON */
+        .center-spin-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 150px; /* Vertically align button roughly in the middle of the wheels */
+            min-width: 150px;
+            height: 200px;
+        }
+
+        #spinButton {
+            background-color: #2c974b;
+            color: white;
+            font-weight: bold;
+            width: 150px; /* Fixed width for the button */
+            padding: 15px 18px;
+            margin: 10px 0;
+            white-space: normal; /* Allow text to wrap if needed */
+        }
+        #spinButton:hover { background-color: #238636; }
+
+        /* Add Controls */
+        .add-controls input[type="text"] {
+            padding: 10px;
+            margin-right: 8px;
+            border: 1px solid #d1d5da;
+            border-radius: 6px;
+            width: 55%;
+        }
+        .add-controls button {
+            background-color: #0366d6;
+            color: white;
+            margin-top: 10px;
+        }
+        .add-controls button:hover { background-color: #005cc5; }
+
+        #resetButton {
+            background-color: #555;
+            color: white;
+            margin-top: 10px;
+            display: inline-block;
+        }
+        #resetButton:hover { background-color: #333; }
+
+        #shuffleButton {
+            background-color: #ffaa00;
+            color: black;
+            margin-left: 10px;
+            display: inline-block;
+        }
+        #shuffleButton:hover { background-color: #e69500; }
+
+        #leagueSelect {
+            padding: 10px;
+            border: 1px solid #d1d5da;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 1em;
+            width: 100%;
+            box-sizing: border-box;
+            background-color: white;
+        }
+
+        /* --- Name List Styling (for editing) --- */
+        #nameList, #numberList {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+            text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        #nameList li, #numberList li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 3px 10px;
+            margin-bottom: 5px;
+            border: 1px solid #eaecef;
+            border-radius: 6px;
+            background-color: #f6f8fa;
+        }
+
+        /* Style for the new editable input fields */
+        .list-name-input {
+            border: none;
+            background: none;
+            flex-grow: 1;
+            padding: 5px 0;
+            font-family: inherit;
+            font-size: inherit;
+            color: inherit;
+            outline: none;
+        }
+
+        .remove-btn {
+            background-color: #cb2431;
+            color: white;
+            padding: 4px 8px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        .remove-btn:hover { background-color: #a01c27; }
+
+        /* --- Result/Canvas Styling --- */
+        .result-box {
+            font-size: 2em;
+            font-weight: 800;
+            padding: 15px;
+            margin-top: 20px;
+            border: 2px solid #e1e4e8;
+            border-radius: 8px;
+            min-height: 50px;
+            color: #24292e;
+            background-color: #fafbfc;
+            width: 100%;
+        }
+
+        /* Specific input styling for Name/Number lists */
+        .list-management {
+            border: 1px solid #e1e4e8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .control-buttons-group {
+            text-align: center;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <div class="controls">
+
+            <div style="width: 100%; text-align: center; padding-bottom: 20px;">
+                <div class="banner" style="font-size: 1.1em; padding: 10px 15px;">Load a League or Customize Below</div>
+                <select id="leagueSelect" onchange="loadLeague()">
+                    <option value="Custom">Custom Spinners (0 Items)</option>
+                    <option value="NFL">NFL (Football)</option>
+                    <option value="NBA">NBA (Basketball)</option>
+                    <option value="MLB">MLB (Baseball)</option>
+                    <option value="NHL">NHL (Hockey)</option>
+                    <option value="MLS">MLS (Soccer)</option>
+                </select>
+            </div>
+
+            <div class="controls-column">
+                <div class="banner">Wheel #1</div>
+                <div class="list-management">
+                    <p>
+                        <input type="text" id="nameInput" placeholder="Add Item Abbr/Name...">
+                        <button id="addNameButton" onclick="addName()">Add</button>
+                    </p>
+                    <ul id="nameList"></ul>
+                </div>
+            </div>
+
+            <div class="controls-column">
+                <div class="banner">Wheel #2</div>
+                <div class="list-management">
+                    <p>
+                        <input type="text" id="numberInput" placeholder="Add Descriptive Name...">
+                        <button id="addNumberButton" onclick="addNumber()">Add</button>
+                    </p>
+                    <ul id="numberList"></ul>
+                </div>
+            </div>
+
+            <div style="width: 100%; text-align: center; padding: 10px 0;">
+                <button id="resetButton" onclick="resetToCurrentLeague()">Reset Current League/Lists</button>
+                <button id="shuffleButton" onclick="shuffleNames()">Shuffle Both</button>
+            </div>
+        </div>
+
+        <div class="wheel-display-row">
+
+            <div class="wheel-group">
+                <h2>Wheel #1</h2>
+                <canvas id="wheelCanvas1" width="500" height="500"></canvas>
+                <div id="result1" class="result-box">?</div>
+            </div>
+
+            <div class="center-spin-container">
+                <div class="banner" style="font-size: 1.1em; padding: 10px;">Ready to Pair?</div>
+                <button id="spinButton" onclick="spinWheels()">Spin Both Wheels</button>
+            </div>
+
+            <div class="wheel-group">
+                <h2>Wheel #2</h2>
+                <canvas id="wheelCanvas2" width="500" height="500"></canvas>
+                <div id="result2" class="result-box">?</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- TEAM DATA (Structured: abbr for wheel, name for result/popup) ---
+        const TEAM_MAP = {
+            NFL: [
+                { abbr: "ARI", name: "Arizona Cardinals" }, { abbr: "ATL", name: "Atlanta Falcons" }, { abbr: "BAL", name: "Baltimore Ravens" },
+                { abbr: "BUF", name: "Buffalo Bills" }, { abbr: "CAR", name: "Carolina Panthers" }, { abbr: "CHI", name: "Chicago Bears" },
+                { abbr: "CIN", name: "Cincinnati Bengals" }, { abbr: "CLE", name: "Cleveland Browns" }, { abbr: "DAL", name: "Dallas Cowboys" },
+                { abbr: "DEN", name: "Denver Broncos" }, { abbr: "DET", name: "Detroit Lions" }, { abbr: "GB", name: "Green Bay Packers" },
+                { abbr: "HOU", name: "Houston Texans" }, { abbr: "IND", name: "Indianapolis Colts" }, { abbr: "JAX", name: "Jacksonville Jaguars" },
+                { abbr: "KC", name: "Kansas City Chiefs" }, { abbr: "LAC", name: "LA Chargers" }, { abbr: "LAR", name: "LA Rams" },
+                { abbr: "LV", name: "Las Vegas Raiders" }, { abbr: "MIA", name: "Miami Dolphins" }, { abbr: "MIN", name: "Minnesota Vikings" },
+                { abbr: "NE", name: "New England Patriots" }, { abbr: "NO", name: "New Orleans Saints" }, { abbr: "NYG", name: "New York Giants" },
+                { abbr: "NYJ", name: "New York Jets" }, { abbr: "PHI", name: "Philadelphia Eagles" }, { abbr: "PIT", name: "Pittsburgh Steelers" },
+                { abbr: "SEA", name: "Seattle Seahawks" }, { abbr: "SF", name: "San Francisco 49ers" }, { abbr: "TB", name: "Tampa Bay Buccaneers" },
+                { abbr: "TEN", name: "Tennessee Titans" }, { abbr: "WAS", name: "Washington Commanders" }
+            ],
+            NBA: [
+                { abbr: "ATL", name: "Atlanta Hawks" }, { abbr: "BOS", name: "Boston Celtics" }, { abbr: "BKN", name: "Brooklyn Nets" },
+                { abbr: "CHA", name: "Charlotte Hornets" }, { abbr: "CHI", name: "Chicago Bulls" }, { abbr: "CLE", name: "Cleveland Cavaliers" },
+                { abbr: "DAL", name: "Dallas Mavericks" }, { abbr: "DEN", name: "Denver Nuggets" }, { abbr: "DET", name: "Detroit Pistons" },
+                { abbr: "GSW", name: "Golden State Warriors" }, { abbr: "HOU", name: "Houston Rockets" }, { abbr: "IND", name: "Indiana Pacers" },
+                { abbr: "LAC", name: "LA Clippers" }, { abbr: "LAL", name: "LA Lakers" }, { abbr: "MEM", name: "Memphis Grizzlies" },
+                { abbr: "MIA", name: "Miami Heat" }, { abbr: "MIL", name: "Milwaukee Bucks" }, { abbr: "MIN", name: "Minnesota Timberwolves" },
+                { abbr: "NOP", name: "New Orleans Pelicans" }, { abbr: "NYK", name: "New York Knicks" }, { abbr: "OKC", name: "Oklahoma City Thunder" },
+                { abbr: "ORL", name: "Orlando Magic" }, { abbr: "PHI", name: "Philadelphia 76ers" }, { abbr: "PHX", name: "Phoenix Suns" },
+                { abbr: "POR", name: "Portland Trail Blazers" }, { abbr: "SAC", name: "Sacramento Kings" }, { abbr: "SAS", name: "San Antonio Spurs" },
+                { abbr: "TOR", name: "Toronto Raptors" }, { abbr: "UTA", name: "Utah Jazz" }, { abbr: "WAS", name: "Washington Wizards" }
+            ],
+            MLB: [
+                { abbr: "ARI", name: "Arizona Diamondbacks" }, { abbr: "ATL", name: "Atlanta Braves" }, { abbr: "BAL", name: "Baltimore Orioles" },
+                { abbr: "BOS", name: "Boston Red Sox" }, { abbr: "CHC", name: "Chicago Cubs" }, { abbr: "CWS", name: "Chicago White Sox" },
+                { abbr: "CIN", name: "Cincinnati Reds" }, { abbr: "CLE", name: "Cleveland Guardians" }, { abbr: "COL", name: "Colorado Rockies" },
+                { abbr: "DET", name: "Detroit Tigers" }, { abbr: "HOU", name: "Houston Astros" }, { abbr: "KC", name: "Kansas City Royals" },
+                { abbr: "LAA", name: "Los Angeles Angels" }, { abbr: "LAD", name: "Los Angeles Dodgers" }, { abbr: "MIA", name: "Miami Marlins" },
+                { abbr: "MIL", name: "Milwaukee Brewers" }, { abbr: "MIN", name: "Minnesota Twins" }, { abbr: "NYM", name: "New York Mets" },
+                { abbr: "NYY", name: "New York Yankees" }, { abbr: "OAK", name: "Oakland Athletics" }, { abbr: "PHI", name: "Philadelphia Phillies" },
+                { abbr: "PIT", name: "Pittsburgh Pirates" }, { abbr: "SD", name: "San Diego Padres" }, { abbr: "SF", name: "San Francisco Giants" },
+                { abbr: "SEA", name: "Seattle Mariners" }, { abbr: "STL", name: "St. Louis Cardinals" }, { abbr: "TB", name: "Tampa Bay Rays" },
+                { abbr: "TEX", name: "Texas Rangers" }, { abbr: "TOR", name: "Toronto Blue Jays" }, { abbr: "WAS", name: "Washington Nationals" }
+            ],
+            NHL: [
+                { abbr: "ANA", name: "Anaheim Ducks" }, { abbr: "ARI", name: "Arizona Coyotes" }, { abbr: "BOS", name: "Boston Bruins" },
+                { abbr: "BUF", name: "Buffalo Sabres" }, { abbr: "CGY", name: "Calgary Flames" }, { abbr: "CAR", name: "Carolina Hurricanes" },
+                { abbr: "CHI", name: "Chicago Blackhawks" }, { abbr: "COL", name: "Colorado Avalanche" }, { abbr: "CBJ", name: "Columbus Blue Jackets" },
+                { abbr: "DAL", name: "Dallas Stars" }, { abbr: "DET", name: "Detroit Red Wings" }, { abbr: "EDM", name: "Edmonton Oilers" },
+                { abbr: "FLA", name: "Florida Panthers" }, { abbr: "LAK", name: "Los Angeles Kings" }, { abbr: "MIN", name: "Minnesota Wild" },
+                { abbr: "MTL", name: "Montreal Canadiens" }, { abbr: "NSH", name: "Nashville Predators" }, { abbr: "NJD", name: "New Jersey Devils" },
+                { abbr: "NYI", name: "New York Islanders" }, { abbr: "NYR", name: "New York Rangers" }, { abbr: "OTT", name: "Ottawa Senators" },
+                { abbr: "PHI", name: "Philadelphia Flyers" }, { abbr: "PIT", name: "Pittsburgh Penguins" }, { abbr: "SJS", name: "San Jose Sharks" },
+                { abbr: "STL", name: "St. Louis Blues" }, { abbr: "TBL", name: "Tampa Bay Lightning" }, { abbr: "TOR", name: "Toronto Maple Leafs" },
+                { abbr: "VAN", name: "Vancouver Canucks" }, { abbr: "VGK", name: "Vegas Golden Knights" }, { abbr: "WSH", name: "Washington Capitals" },
+                { abbr: "WPG", name: "Winnipeg Jets" }
+            ],
+            MLS: [
+                { abbr: "ATL", name: "Atlanta United FC" }, { abbr: "AUS", name: "Austin FC" }, { abbr: "CLT", name: "Charlotte FC" },
+                { abbr: "CHI", name: "Chicago Fire FC" }, { abbr: "CIN", name: "FC Cincinnati" }, { abbr: "COL", name: "Colorado Rapids" },
+                { abbr: "DAL", name: "FC Dallas" }, { abbr: "DCU", name: "D.C. United" }, { abbr: "HOU", name: "Houston Dynamo FC" },
+                { abbr: "KC", name: "Sporting Kansas City" }, { abbr: "LAFC", name: "Los Angeles FC" }, { abbr: "LAG", name: "LA Galaxy" },
+                { abbr: "MIA", name: "Inter Miami CF" }, { abbr: "MIN", name: "Minnesota United FC" }, { abbr: "MTL", name: "CF Montréal" },
+                { abbr: "NSH", name: "Nashville SC" }, { abbr: "NYRB", name: "New York Red Bulls" }, { abbr: "NYCFC", name: "New York City FC" },
+                { abbr: "ORL", name: "Orlando City SC" }, { abbr: "PHI", name: "Philadelphia Union" }, { abbr: "POR", name: "Portland Timbers" },
+                { abbr: "RSL", name: "Real Salt Lake" }, { abbr: "SJ", name: "San Jose Earthquakes" }, { abbr: "SEA", name: "Seattle Sounders FC" },
+                { abbr: "STL", name: "St. Louis City SC" }, { abbr: "TOR", name: "Toronto FC" }, { abbr: "VAN", name: "Vancouver Whitecaps FC" }
+            ]
+        };
+
+        // --- CORE STATE ---
+        // teamNames (Wheel 1) and numberNames (Wheel 2) now store objects { abbr, name }
+        let teamNames = [];
+        let numberNames = [];
+        let isSpinning1 = false;
+        let isSpinning2 = false;
+        let currentLeagueKey = "Custom"; // Tracks the currently loaded list type
+
+        // --- CANVAS REFERENCES ---
+        const canvas1 = document.getElementById('wheelCanvas1');
+        const ctx1 = canvas1.getContext('2d');
+        const canvas2 = document.getElementById('wheelCanvas2');
+        const ctx2 = canvas2.getContext('2d');
+
+        // --- SPIN VARIABLES (Separate for each wheel) ---
+        let startAngle1 = 0;
+        let startAngle2 = 0;
+        let spinTimeout1 = null;
+        let spinTimeout2 = null;
+
+        // Color palette used for BOTH wheels
+        const wheelColors = ["#0366d6", "#8BC34A", "#FF9800", "#E91E63", "#4A148C", "#FFEB3B", "#3F51B5", "#F44336", "#00BCD4", "#2c974b"];
+
+
+        // --- DRAWING FUNCTIONS ---
+        /**
+         * Draws a wheel with the given names and colors.
+         * @param {HTMLCanvasElement} canvas
+         * @param {CanvasRenderingContext2D} ctx
+         * @param {Array<Object>} names - List of items to draw. (Always objects {abbr, name})
+         * @param {number} startAngle - Rotation offset.
+         * @param {string[]} colors - Simple array of colors to rotate through.
+         */
+        function drawWheel(canvas, ctx, names, startAngle, colors) {
+            const currentRadius = canvas.width / 2;
+            const diameter = canvas.width;
+
+            ctx.clearRect(0, 0, diameter, diameter);
+
+            if (names.length === 0) {
+                ctx.fillStyle = '#cc5555';
+                ctx.font = 'bold 24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('List is Empty!', currentRadius, currentRadius);
+                return;
+            }
+
+            const arc = Math.PI / (names.length / 2);
+
+            for(let i = 0; i < names.length; i++) {
+                const item = names[i];
+                const angle = startAngle + i * arc;
+                
+                // Use item.abbr for display on the wheel
+                const textToDisplay = item.abbr;
+                
+                const fillColor = colors[i % colors.length];
+                const textColor = 'white'; 
+
+                ctx.fillStyle = fillColor;
+
+                ctx.beginPath();
+                ctx.arc(currentRadius, currentRadius, currentRadius - 10, angle, angle + arc, false);
+                ctx.arc(currentRadius, currentRadius, 0, angle + arc, angle, true);
+                ctx.fill();
+
+                ctx.save();
+
+                ctx.fillStyle = textColor;
+
+                ctx.translate(currentRadius + Math.cos(angle + arc / 2) * (currentRadius - 70),
+                              currentRadius + Math.sin(angle + arc / 2) * (currentRadius - 70));
+
+                ctx.rotate(angle + arc / 2 + Math.PI / 2);
+                ctx.font = 'bold 18px Arial';
+                ctx.textAlign = 'center'; 
+                ctx.fillText(textToDisplay, 0, 0);
+                ctx.restore();
+            }
+
+            // Draw Pointer (Triangle)
+            ctx.fillStyle = "#333";
+            ctx.beginPath();
+            ctx.moveTo(currentRadius - 15, 0);
+            ctx.lineTo(currentRadius + 15, 0);
+            ctx.lineTo(currentRadius, 30);
+            ctx.fill();
+        }
+
+        // --- SPIN LOGIC (Winning logic updated for objects) ---
+
+        function spinWheels() {
+            if (isSpinning1 || isSpinning2) return;
+            if (teamNames.length === 0 || numberNames.length === 0) {
+                showModal('Error', 'One or both lists are empty! Please add items or load a league.');
+                return;
+            }
+
+            toggleInputs(false);
+
+            spinWheel1();
+            spinWheel2();
+        }
+
+        // --- WHEEL 1 LOGIC (Uses item.name for result) ---
+
+        function spinWheel1() {
+            isSpinning1 = true;
+            document.getElementById('result1').textContent = "Spinning...";
+
+            const spinAngleStart1 = Math.random() * 10 + 10;
+            const spinTimeTotal1 = Math.random() * 3000 + 6000;
+            let spinTime1 = 0;
+
+            function rotateWheel1() {
+                spinTime1 += 30;
+                if(spinTime1 >= spinTimeTotal1) {
+                    stopRotateWheel1();
+                    return;
+                }
+
+                const spinAngle = spinAngleStart1 - easeOut(spinTime1, 0, spinAngleStart1, spinTimeTotal1);
+                startAngle1 += (spinAngle * Math.PI / 180);
+
+                drawWheel(canvas1, ctx1, teamNames, startAngle1, wheelColors);
+
+                spinTimeout1 = requestAnimationFrame(rotateWheel1);
+            }
+            rotateWheel1();
+        }
+
+        function stopRotateWheel1() {
+            cancelAnimationFrame(spinTimeout1);
+            isSpinning1 = false;
+
+            const degrees = startAngle1 * 180 / Math.PI + 90;
+            const arc = Math.PI / (teamNames.length / 2);
+            const arcd = arc * 180 / Math.PI;
+
+            const index = Math.floor((360 - degrees % 360) % 360 / arcd);
+            
+            // Get the winning object/string
+            const winningItem = teamNames[index];
+            // If it's an object, use 'name'.
+            const winningTeamName = winningItem && winningItem.name ? winningItem.name : winningItem; 
+            
+            document.getElementById('result1').textContent = winningTeamName;
+
+            if (!isSpinning2) {
+                handleSpinStop();
+            }
+        }
+
+        // --- WHEEL 2 LOGIC (Updated to use item.name for result) ---
+
+        function spinWheel2() {
+            isSpinning2 = true;
+            document.getElementById('result2').textContent = "Spinning...";
+
+            const spinAngleStart2 = Math.random() * 10 + 10;
+            const spinTimeTotal2 = Math.random() * 6000 + 7000;
+            let spinTime2 = 0;
+
+            function rotateWheel2() {
+                spinTime2 += 30;
+                if(spinTime2 >= spinTimeTotal2) {
+                    stopRotateWheel2();
+                    return;
+                }
+
+                const spinAngle = spinAngleStart2 - easeOut(spinTime2, 0, spinAngleStart2, spinTimeTotal2);
+                startAngle2 += (spinAngle * Math.PI / 180);
+
+                drawWheel(canvas2, ctx2, numberNames, startAngle2, wheelColors);
+
+                spinTimeout2 = requestAnimationFrame(rotateWheel2);
+            }
+            rotateWheel2();
+        }
+
+        function stopRotateWheel2() {
+            cancelAnimationFrame(spinTimeout2);
+            isSpinning2 = false;
+
+            const degrees = startAngle2 * 180 / Math.PI + 90;
+            const arc = Math.PI / (numberNames.length / 2);
+            const arcd = arc * 180 / Math.PI;
+
+            const index = Math.floor((360 - degrees % 360) % 360 / arcd);
+            
+            const winningItem = numberNames[index];
+            // Use the descriptive name for the result box
+            const winningNumberName = winningItem.name; 
+            
+            document.getElementById('result2').textContent = winningNumberName;
+
+            if (!isSpinning1) {
+                handleSpinStop();
+            }
+        }
+
+        function handleSpinStop() {
+            // Get the full name from result1 
+            const winningTeam = document.getElementById('result1').textContent; 
+            const winningNumber = document.getElementById('result2').textContent; // This is now the descriptive name
+
+            // Show custom confirmation modal with removal options
+            showCustomConfirmModal(
+                'Pairing Complete!',
+                `The winning pair is ${winningTeam} and ${winningNumber}. What action would you like to take?`,
+                winningTeam, // Full team name for comparison/removal logic
+                winningNumber
+            );
+
+            toggleInputs(true);
+        }
+
+        function easeOut(t, b, c, d) {
+            const ts = (t/=d)*t;
+            const tc = ts*t;
+            return b+c*(tc + -3*ts + 3*t);
+        }
+
+        // --- UTILS (Custom Modal Implementation) ---
+        
+        /**
+         * Creates a custom modal with dynamic buttons.
+         * @param {string} title
+         * @param {string} message
+         * @param {Array<Object>} options - Array of { text: string, action: function, style: string }
+         */
+        function createModal(title, message, options) {
+            const existingModal = document.getElementById('custom-modal-overlay');
+            if (existingModal) existingModal.remove();
+
+            const overlay = document.createElement('div');
+            overlay.id = 'custom-modal-overlay';
+            overlay.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center;
+                align-items: center; z-index: 1000;
+            `;
+
+            const modalBox = document.createElement('div');
+            modalBox.style.cssText = `
+                background: white; padding: 30px; border-radius: 10px;
+                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3); max-width: 450px;
+                text-align: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            `;
+
+            const modalTitle = document.createElement('h3');
+            modalTitle.textContent = title;
+            modalTitle.style.cssText = 'margin-top: 0; color: #0366d6;';
+
+            const modalMessage = document.createElement('p');
+            modalMessage.textContent = message;
+            modalMessage.style.cssText = 'margin-bottom: 20px;';
+
+            modalBox.appendChild(modalTitle);
+            modalBox.appendChild(modalMessage);
+
+            const buttonGroup = document.createElement('div');
+            buttonGroup.style.cssText = 'display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;';
+
+            const close = () => overlay.remove();
+
+            options.forEach(option => {
+                const btn = document.createElement('button');
+                btn.textContent = option.text;
+                btn.style.cssText = option.style + ' padding: 10px 15px; border-radius: 6px; border: none; cursor: pointer;';
+                btn.onclick = () => {
+                    option.action();
+                    close();
+                };
+                buttonGroup.appendChild(btn);
+            });
+
+            modalBox.appendChild(buttonGroup);
+            overlay.appendChild(modalBox);
+            document.body.appendChild(overlay);
+        }
+
+        // Helper for simple alerts
+        function showModal(title, message) {
+            createModal(title, message, [{ text: 'OK', action: () => {}, style: 'background-color: #0366d6; color: white;' }]);
+        }
+
+        // Helper for the specific post-spin confirmation
+        // winningTeam is the FULL NAME string
+        function showCustomConfirmModal(title, message, winningTeamName, winningNumberName) {
+            const options = [
+                {
+                    text: 'Keep Both',
+                    action: () => {}, 
+                    style: 'background-color: #6a737d; color: white;'
+                },
+                {
+                    text: `Remove ${winningTeamName} Only`,
+                    action: () => {
+                        // Removal must search by full name
+                        removeName(winningTeamName, 'team', true);
+                    },
+                    style: 'background-color: #0366d6; color: white;'
+                },
+                // NEW OPTION ADDED HERE
+                {
+                    text: `Remove ${winningNumberName} Only`,
+                    action: () => {
+                        // Removal must search by descriptive name
+                        removeName(winningNumberName, 'number', true); 
+                    },
+                    style: 'background-color: #FF9800; color: white;'
+                },
+                {
+                    text: 'Remove Both',
+                    action: () => {
+                        // Removal must search by full name for team, and descriptive name for number
+                        removeName(winningTeamName, 'team', true);
+                        removeName(winningNumberName, 'number', true); // Pass true to indicate searching by name
+                    },
+                    style: 'background-color: #cb2431; color: white;'
+                }
+            ];
+            createModal(title, message, options);
+        }
+
+        function toggleInputs(enable) {
+            document.getElementById('spinButton').disabled = !enable || teamNames.length === 0 || numberNames.length === 0;
+            document.getElementById('resetButton').disabled = !enable;
+            document.getElementById('shuffleButton').disabled = !enable;
+
+            document.getElementById('addNameButton').disabled = !enable;
+            document.getElementById('nameInput').disabled = !enable;
+            document.getElementById('addNumberButton').disabled = !enable;
+            document.getElementById('numberInput').disabled = !enable;
+
+            const removeBtns = document.querySelectorAll('.remove-btn');
+            removeBtns.forEach(btn => btn.disabled = !enable);
+
+            const nameInputs = document.querySelectorAll('.list-name-input');
+            nameInputs.forEach(input => input.disabled = !enable);
+        }
+
+        // --- LEAGUE/LIST MANAGEMENT ---
+
+        /**
+         * Generates default number names as objects.
+         * @param {number} count - The number of items to generate.
+         * @returns {Array<{abbr: string, name: string}>}
+         */
+        function generateDefaultNumbers(count) {
+            // Returns objects: { abbr: '1', name: 'User 1' }
+            return Array.from({ length: count }, (_, i) => ({ 
+                abbr: `${i + 1}`, 
+                name: `Item ${i + 1}` 
+            }));
+        }
+
+        function loadLeague() {
+            const select = document.getElementById('leagueSelect');
+            const leagueKey = select.value;
+            currentLeagueKey = leagueKey;
+
+            if (leagueKey === 'Custom') {
+                teamNames = [];
+                numberNames = [];
+            } else {
+                // 1. Populate Wheel 1 (Teams) with objects
+                const teams = TEAM_MAP[leagueKey]; 
+                // Sort by abbreviation
+                teamNames = [...teams].sort((a, b) => a.abbr.localeCompare(b.abbr)); 
+
+                // 2. Populate Wheel 2 (Numbers/Users) to match size, now as objects
+                numberNames = generateDefaultNumbers(teams.length);
+                // No sort needed here as generateDefaultNumbers creates it sequentially
+            }
+
+            // 3. Update UI and Draw
+            updateNameList();
+            updateNumberList();
+            redrawWheels();
+            toggleInputs(true); 
+        }
+
+        function resetToCurrentLeague() {
+            if (isSpinning1 || isSpinning2) return;
+
+            const select = document.getElementById('leagueSelect');
+            const currentName = select.options[select.selectedIndex].text;
+
+            if (currentLeagueKey === 'Custom') {
+                createModal(
+                    'Confirm Reset',
+                    'Are you sure you want to clear both custom lists? This cannot be undone.',
+                    [
+                        { text: 'Cancel', action: () => {}, style: 'background-color: #6a737d; color: white;' },
+                        { text: 'Yes, Clear All', action: () => { loadLeague(); }, style: 'background-color: #cb2431; color: white;' }
+                    ]
+                );
+            } else {
+                createModal(
+                    'Confirm Reload',
+                    `Are you sure you want to reload the current league (${currentName})? This will discard all manual edits.`,
+                    [
+                        { text: 'Cancel', action: () => {}, style: 'background-color: #6a737d; color: white;' },
+                        { text: 'Yes, Reload', action: () => { loadLeague(); }, style: 'background-color: #cb2431; color: white;' }
+                    ]
+                );
+            }
+        }
+
+        function redrawWheels() {
+            drawWheel(canvas1, ctx1, teamNames, startAngle1, wheelColors);
+            drawWheel(canvas2, ctx2, numberNames, startAngle2, wheelColors);
+
+            document.getElementById('result1').textContent = "?";
+            document.getElementById('result2').textContent = "?";
+        }
+
+        /**
+         * Handles editing an item name/abbr in the list view.
+         * @param {string} key - The unique identifier to find the item (abbr for team, abbr for number).
+         * @param {string} newValue - The new value entered by the user.
+         * @param {string} listType - 'team' or 'number'.
+         * @param {boolean} isAbbrUpdate - true if updating abbr, false if updating name (only relevant for teams).
+         */
+        function handleEdit(key, newValue, listType, isAbbrUpdate = false) {
+            if (isSpinning1 || isSpinning2) return;
+            if (!newValue.trim()) return;
+
+            if (currentLeagueKey !== 'Custom') {
+                currentLeagueKey = 'Custom';
+                document.getElementById('leagueSelect').value = 'Custom'; 
+            }
+
+            if (listType === 'team') {
+                const item = teamNames.find(t => t.abbr === key);
+                if (item) {
+                    if (isAbbrUpdate) {
+                        item.abbr = newValue;
+                        // If the original name matched the abbreviation, update name too.
+                        if (item.name === key) {
+                            item.name = newValue;
+                        }
+                        sortTeamNames();
+                        updateNameList();
+                    } else {
+                         // Should not happen for teams as we only display/edit abbr
+                    }
+                    redrawWheels();
+                }
+            } else if (listType === 'number') {
+                // key is the unique abbr. We are updating the descriptive name.
+                const item = numberNames.find(n => n.abbr === key);
+                if (item) {
+                    item.name = newValue;
+                    // Note: We don't sort numberNames by name, only by abbr (number)
+                    updateNumberList(); 
+                    redrawWheels();
+                }
+            }
+        }
+
+        function addName() {
+            if (isSpinning1 || isSpinning2) return;
+            const input = document.getElementById('nameInput');
+            const newAbbr = input.value.trim();
+
+            if (newAbbr) {
+                // Check if abbreviation already exists
+                const existing = teamNames.find(t => t.abbr === newAbbr);
+
+                if (!existing) {
+                    // Custom teams have abbr and name set to the same value initially
+                    const newTeam = { abbr: newAbbr, name: newAbbr };
+                    teamNames.push(newTeam);
+                    input.value = '';
+                    sortTeamNames();
+                    updateNameList();
+                    redrawWheels();
+                    
+                    if (currentLeagueKey !== 'Custom') {
+                        currentLeagueKey = 'Custom';
+                        document.getElementById('leagueSelect').value = 'Custom';
+                    }
+                } else {
+                    showModal('Duplicate Item', 'That item abbreviation/name already exists in the list!');
+                }
+            }
+        }
+
+        function addNumber() {
+            if (isSpinning1 || isSpinning2) return;
+            const input = document.getElementById('numberInput');
+            const newName = input.value.trim();
+
+            if (newName) {
+                // Determine the next sequential number (abbr)
+                const numericalAbbrs = numberNames.map(n => parseInt(n.abbr)).filter(n => !isNaN(n));
+                const maxNum = numericalAbbrs.length > 0 ? Math.max(...numericalAbbrs) : 0;
+                const newAbbr = `${maxNum + 1}`;
+
+                // Check for duplicate names (we allow duplicate numbers if names are different, but we check names for better UX)
+                if (numberNames.some(n => n.name === newName)) {
+                     showModal('Duplicate Item', 'That descriptive name already exists in the list!');
+                     return;
+                }
+                
+                const newNumberItem = { abbr: newAbbr, name: newName };
+                numberNames.push(newNumberItem);
+                input.value = '';
+                
+                // Sort by the numerical abbr
+                sortNumberNames(); 
+                updateNumberList();
+                redrawWheels();
+
+                if (currentLeagueKey !== 'Custom') {
+                    currentLeagueKey = 'Custom';
+                    document.getElementById('leagueSelect').value = 'Custom';
+                }
+            }
+        }
+
+        // isFullName is true when calling from the popup (for teams only)
+        // isNameSearch is true when removing a Wheel 2 item by its descriptive name (from popup)
+        function removeName(itemIdentifier, listType, isNameSearch = false) {
+            if (isSpinning1 || isSpinning2) return;
+
+            if (listType === 'team') {
+                // itemIdentifier is full name (popup) or abbr (list view)
+                teamNames = teamNames.filter(t => isNameSearch ? t.name !== itemIdentifier : t.abbr !== itemIdentifier);
+
+                updateNameList();
+                
+                if (currentLeagueKey !== 'Custom') {
+                    currentLeagueKey = 'Custom';
+                    document.getElementById('leagueSelect').value = 'Custom';
+                }
+            } else if (listType === 'number') {
+                // itemIdentifier is descriptive name (popup) or abbr (list view)
+                if (isNameSearch) {
+                    numberNames = numberNames.filter(n => n.name !== itemIdentifier);
+                } else {
+                    numberNames = numberNames.filter(n => n.abbr !== itemIdentifier);
+                }
+                updateNumberList();
+            }
+            
+            redrawWheels();
+            toggleInputs(true); 
+        }
+
+        // --- SORTING FUNCTIONS ---
+
+        // Custom sort for Wheel 2 items (objects) based on numerical abbr
+        function sortNumberNames() {
+            numberNames.sort((a, b) => {
+                const numA = parseInt(a.abbr);
+                const numB = parseInt(b.abbr);
+
+                if (!isNaN(numA) && !isNaN(numB)) {
+                    return numA - numB;
+                }
+                // Fallback for non-numerical abbr
+                return a.abbr.localeCompare(b.abbr);
+            });
+        }
+        
+        // Sort teams (objects) by abbreviation
+        function sortTeamNames() {
+            teamNames.sort((a, b) => a.abbr.localeCompare(b.abbr));
+        }
+
+        // --- SHUFFLE FUNCTION (Independent shuffle) ---
+        function shuffleNames() {
+            if (isSpinning1 || isSpinning2) return;
+
+            // Shuffle teams (objects)
+            for (let i = teamNames.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [teamNames[i], teamNames[j]] = [teamNames[j], teamNames[i]];
+            }
+
+            // Shuffle numbers (objects)
+            for (let i = numberNames.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [numberNames[i], numberNames[j]] = [numberNames[j], numberNames[i]];
+            }
+
+            updateNameList();
+            updateNumberList();
+            redrawWheels();
+        }
+
+        // --- LIST RENDERING ---
+
+        /**
+         * Updates the UI list based on item type.
+         * @param {Array<Object>} items - List of item objects ({abbr, name})
+         * @param {string} ulId - The ID of the UL element ('nameList' or 'numberList').
+         * @param {string} listType - 'team' or 'number'.
+         */
+        function updateList(items, ulId, listType) {
+            const ul = document.getElementById(ulId);
+            ul.innerHTML = '';
+
+            items.forEach((item) => {
+                const li = document.createElement('li');
+                
+                // Wheel 1 (Team): Shows/Edits abbr.
+                // Wheel 2 (Number): Shows/Edits name.
+                const inputContent = listType === 'team' ? item.abbr : item.name;
+                const uniqueKey = item.abbr; // Use abbr as the stable key for edits/removals
+
+                const nameInput = document.createElement('input');
+                nameInput.type = 'text';
+                nameInput.value = inputContent;
+                nameInput.className = 'list-name-input';
+
+                // We store the unique key (abbr) and the current value (abbr or name)
+                nameInput.setAttribute('data-unique-key', uniqueKey);
+                nameInput.setAttribute('data-current-value', inputContent);
+
+                // Event listener for in-list editing
+                nameInput.onblur = () => {
+                    const key = nameInput.getAttribute('data-unique-key');
+                    const oldValue = nameInput.getAttribute('data-current-value');
+                    const newValue = nameInput.value.trim();
+
+                    if (newValue !== oldValue) {
+                        // For teams (Wheel 1), we are editing the abbr
+                        if (listType === 'team') {
+                             handleEdit(key, newValue, listType, true); // true for isAbbrUpdate
+                        } else {
+                            // For numbers (Wheel 2), we are editing the name
+                            handleEdit(key, newValue, listType, false);
+                        }
+                        nameInput.setAttribute('data-current-value', newValue); 
+                    } else {
+                        // If unchanged, reset the displayed value in case of trimming
+                        nameInput.value = oldValue; 
+                    }
+                };
+
+                li.appendChild(nameInput);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.textContent = 'Remove';
+                removeBtn.className = 'remove-btn';
+                // Always use the unique key (abbr) for removal from the list view
+                removeBtn.onclick = () => removeName(uniqueKey, listType, false); 
+                li.appendChild(removeBtn);
+                ul.appendChild(li);
+            });
+        }
+
+        function updateNameList() {
+            const select = document.getElementById('leagueSelect');
+            const customOption = select.querySelector('option[value="Custom"]');
+            if (customOption) {
+                customOption.textContent = `Custom Spinners (${teamNames.length + numberNames.length} Items)`;
+            }
+
+            updateList(teamNames, 'nameList', 'team');
+        }
+
+        function updateNumberList() {
+            const select = document.getElementById('leagueSelect');
+            const customOption = select.querySelector('option[value="Custom"]');
+            if (customOption) {
+                customOption.textContent = `Custom Spinners (${teamNames.length + numberNames.length} Items)`;
+            }
+            updateList(numberNames, 'numberList', 'number');
+        }
+
+        // --- INITIALIZATION ---
+        (function init() {
+            document.getElementById('leagueSelect').value = 'Custom';
+            loadLeague();
+        })();
+    </script>
+
+</body>
+</html>
